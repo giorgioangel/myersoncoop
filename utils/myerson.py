@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
 import random
+from tqdm import tqdm
 from copy import deepcopy
 from math import factorial
 from itertools import combinations
@@ -89,13 +90,13 @@ def get_combinations_for_player(players, player):
     return with_player
 
 
-def rollout(sim_number, coalition_policy, coalition_stats=None):
-    game = Arena(team_a_policy_list=deepcopy(coalition_policy), team_a_stats=deepcopy(coalition_stats))
+def rollout(sim_number, coalition_policy, coalition_stats=None, team_b_pol_string='random'):
+    game = Arena(team_a_policy_list=deepcopy(coalition_policy), team_a_stats=deepcopy(coalition_stats), team_b_policy_list=[team_b_pol_string for _ in range(3)])
     rewards = game.simulate_games(n=sim_number)
-    return rewards
+    return np.array(rewards)
 
 
-def hybrid_monte_carlo_meyerson(sim_number, meyerson_M, exact_computations, player_stats=None):
+def hybrid_monte_carlo_myerson(sim_number, meyerson_M, exact_computations, player_stats=None):
     if not player_stats:
         player_stats = default_stats()
 
@@ -223,3 +224,199 @@ def hybrid_monte_carlo_meyerson(sim_number, meyerson_M, exact_computations, play
                     rollouts_diff_mean - rollouts_diffout_mean)
     return values
 
+
+def exact_myerson(sim_number, exact_computations, player_stats=None, team_a_pol='random', team_b_pol='random'):
+    if not player_stats:
+        player_stats = default_stats()
+
+    vertices = 3 * (4 + 1)  # 3 policies, + 4 stats per player
+    features = range(vertices)
+    '''
+    features_label = ['Warrior Max HP', 'Warrior Policy', 'Warrior Attack Power', 'Warrior Healing Power', 'Warrior Control Chance',
+                      'Mage Max HP', 'Mage Policy', 'Mage Attack Power', 'Mage Healing Power', 'Mage Control Chance',
+                      'Priest Max HP', 'Priest Policy', 'Priest Attack Power', 'Priest Healing Power', 'Priest Control Chance']
+                      '''
+    #values = np.zeros(vertices)
+    values = np.zeros((vertices, sim_number))
+    computed_coalitions = {}  # dictionary with computed rollouts
+    exact_coalitions = get_combinations_maxsize(features, exact_computations)
+    # exact_coalitions = [list(c) for c in set(tuple(c) for c in exact_coalitions)]
+    # print('Coalitions ', len(exact_coalitions))
+    fv = factorial(vertices)
+    print(len(exact_coalitions))
+    for c in tqdm(exact_coalitions):
+        lc = len(c)
+        difference = list_diff(c, list(features))
+        c = connected_components(c)
+        #rollouts_minus_mean = computed_coalitions.get(str(c))
+        rollouts_minus = computed_coalitions.get(str(c))
+        #if rollouts_minus_mean is None:
+        if rollouts_minus is None:
+            policies_minus = coalition_policy(team_a_pol, c)
+            stats_minus = coalition_stats(c)
+            rollouts_minus = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_minus),
+                                     coalition_stats=deepcopy(stats_minus), team_b_pol_string=team_b_pol)
+            #rollouts_minus_mean = np.mean(rollouts_minus)
+            #computed_coalitions[str(c)] = rollouts_minus_mean
+            computed_coalitions[str(c)] = rollouts_minus
+        for v in difference:
+            coalition_with_v = deepcopy(c)
+            coalition_with_v.append(v)
+            coalition_with_v = connected_components(coalition_with_v)
+            #rollouts_plus_mean = computed_coalitions.get(str(coalition_with_v))
+            rollouts_plus = computed_coalitions.get(str(coalition_with_v))
+            #if rollouts_plus_mean is None:
+            if rollouts_plus is None:
+                if len(list_diff(c, coalition_with_v)) > 0:
+                    policies_plus = coalition_policy(team_a_pol, coalition_with_v)
+                    stats_plus = coalition_stats(coalition_with_v)
+                    rollouts_plus = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_plus),
+                                            coalition_stats=deepcopy(stats_plus), team_b_pol_string=team_b_pol)
+                    #rollouts_plus_mean = np.mean(rollouts_plus)
+                    #computed_coalitions[str(coalition_with_v)] = rollouts_plus_mean
+                    computed_coalitions[str(coalition_with_v)] = rollouts_plus
+                else:
+                    #rollouts_plus_mean = rollouts_minus_mean
+                    rollouts_plus = rollouts_minus
+            #values[v] += factorial(lc) * factorial(vertices - lc - 1) / fv * (rollouts_plus_mean - rollouts_minus_mean)
+            values[v] += factorial(lc) * factorial(vertices - lc - 1) / fv * (rollouts_plus - rollouts_minus)
+
+        ld = len(difference)
+        difference = connected_components(difference)
+        #rollouts_diff_mean = computed_coalitions.get(str(difference))
+        rollouts_diff = computed_coalitions.get(str(difference))
+        #if rollouts_diff_mean is None:
+        if rollouts_diff is None:
+            policies_diff = coalition_policy(team_a_pol, difference)
+            stats_diff = coalition_stats(difference)
+            rollouts_diff = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_diff),
+                                    coalition_stats=deepcopy(stats_diff), team_b_pol_string=team_b_pol)
+            #rollouts_diff_mean = np.mean(rollouts_diff)
+            #computed_coalitions[str(difference)] = rollouts_diff_mean
+            computed_coalitions[str(difference)] = rollouts_diff
+        for v in difference:
+            coalition_without_v = deepcopy(difference)
+            try:
+                coalition_without_v.remove(v)
+            except:
+                continue
+            coalition_without_v = connected_components(coalition_without_v)
+            #rollouts_diffout_mean = computed_coalitions.get(str(coalition_without_v))
+            rollouts_diffout = computed_coalitions.get(str(coalition_without_v))
+            #if rollouts_diffout_mean is None:
+            if rollouts_diffout is None:
+                if len(list_diff(difference, coalition_without_v)) > 0:
+                    policies_diffout = coalition_policy(team_a_pol, coalition_without_v)
+                    stats_diffout = coalition_stats(coalition_without_v)
+                    rollouts_diffout = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_diffout),
+                                               coalition_stats=deepcopy(stats_diffout), team_b_pol_string=team_b_pol)
+                    #rollouts_diffout_mean = np.mean(rollouts_diffout)
+                    #computed_coalitions[str(coalition_without_v)] = rollouts_diffout_mean
+                    computed_coalitions[str(coalition_without_v)] = rollouts_diffout
+                else:
+                    #rollouts_diffout_mean = rollouts_diff_mean
+                    rollouts_diffout = rollouts_diff
+            #values[v] += factorial(ld - 1) * factorial(vertices - ld) / fv * (rollouts_diff_mean - rollouts_diffout_mean)
+            values[v] += factorial(ld - 1) * factorial(vertices - ld) / fv * (
+                        rollouts_diff - rollouts_diffout)
+    np.savez_compressed('exact_myerson_a'+team_a_pol+'_b'+team_b_pol+'.npz', v=values, allow_pickle=True)
+    values = np.mean(values, axis=1)
+    return values
+
+
+def exact_shapley(sim_number, exact_computations, player_stats=None,  team_a_pol='random', team_b_pol='random'):
+    if not player_stats:
+        player_stats = default_stats()
+
+    vertices = 3 * (4 + 1)  # 3 policies, + 4 stats per player
+    features = range(vertices)
+    '''
+    features_label = ['Warrior Max HP', 'Warrior Policy', 'Warrior Attack Power', 'Warrior Healing Power', 'Warrior Control Chance',
+                      'Mage Max HP', 'Mage Policy', 'Mage Attack Power', 'Mage Healing Power', 'Mage Control Chance',
+                      'Priest Max HP', 'Priest Policy', 'Priest Attack Power', 'Priest Healing Power', 'Priest Control Chance']
+                      '''
+    # values = np.zeros(vertices)
+    values = np.zeros((vertices, sim_number))
+    computed_coalitions = {}  # dictionary with computed rollouts
+    exact_coalitions = get_combinations_maxsize(features, exact_computations)
+    # exact_coalitions = [list(c) for c in set(tuple(c) for c in exact_coalitions)]
+    # print('Coalitions ', len(exact_coalitions))
+    fv = factorial(vertices)
+    print(len(exact_coalitions))
+    for c in tqdm(exact_coalitions):
+        lc = len(c)
+        difference = list_diff(c, list(features))
+        #c = connected_components(c)
+        #rollouts_minus_mean = computed_coalitions.get(str(c))
+        rollouts_minus = computed_coalitions.get(str(c))
+        #if rollouts_minus_mean is None:
+        if rollouts_minus is None:
+            policies_minus = coalition_policy(team_a_pol, c)
+            stats_minus = coalition_stats(c)
+            rollouts_minus = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_minus),
+                                     coalition_stats=deepcopy(stats_minus), team_b_pol_string=team_b_pol)
+            #rollouts_minus_mean = np.mean(rollouts_minus)
+            #computed_coalitions[str(c)] = rollouts_minus_mean
+            computed_coalitions[str(c)] = rollouts_minus
+        for v in difference:
+            coalition_with_v = deepcopy(c)
+            coalition_with_v.append(v)
+            #coalition_with_v = connected_components(coalition_with_v)
+            #rollouts_plus_mean = computed_coalitions.get(str(coalition_with_v))
+            rollouts_plus = computed_coalitions.get(str(coalition_with_v))
+            #if rollouts_plus_mean is None:
+            if rollouts_plus is None:
+                if len(list_diff(c, coalition_with_v)) > 0:
+                    policies_plus = coalition_policy(team_a_pol, coalition_with_v)
+                    stats_plus = coalition_stats(coalition_with_v)
+                    rollouts_plus = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_plus),
+                                            coalition_stats=deepcopy(stats_plus), team_b_pol_string=team_b_pol)
+                    #rollouts_plus_mean = np.mean(rollouts_plus)
+                    #computed_coalitions[str(coalition_with_v)] = rollouts_plus_mean
+                    computed_coalitions[str(coalition_with_v)] = rollouts_plus
+                else:
+                    #rollouts_plus_mean = rollouts_minus_mean
+                    rollouts_plus = rollouts_minus
+            #values[v] += factorial(lc) * factorial(vertices - lc - 1) / fv * (rollouts_plus_mean - rollouts_minus_mean)
+            values[v] += factorial(lc) * factorial(vertices - lc - 1) / fv * (rollouts_plus - rollouts_minus)
+
+        ld = len(difference)
+        #difference = connected_components(difference)
+        #rollouts_diff_mean = computed_coalitions.get(str(difference))
+        rollouts_diff = computed_coalitions.get(str(difference))
+        #if rollouts_diff_mean is None:
+        if rollouts_diff is None:
+            policies_diff = coalition_policy(team_a_pol, difference)
+            stats_diff = coalition_stats(difference)
+            rollouts_diff = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_diff),
+                                            coalition_stats=deepcopy(stats_diff), team_b_pol_string=team_b_pol)
+            #rollouts_diff_mean = np.mean(rollouts_diff)
+            #computed_coalitions[str(difference)] = rollouts_diff_mean
+            computed_coalitions[str(difference)] = rollouts_diff
+        for v in difference:
+            coalition_without_v = deepcopy(difference)
+            try:
+                coalition_without_v.remove(v)
+            except:
+                continue
+            #coalition_without_v = connected_components(coalition_without_v)
+            #rollouts_diffout_mean = computed_coalitions.get(str(coalition_without_v))
+            rollouts_diffout = computed_coalitions.get(str(coalition_without_v))
+            #if rollouts_diffout_mean is None:
+            if rollouts_diffout is None:
+                if len(list_diff(difference, coalition_without_v)) > 0:
+                    policies_diffout = coalition_policy(team_a_pol, coalition_without_v)
+                    stats_diffout = coalition_stats(coalition_without_v)
+                    rollouts_diffout = rollout(sim_number=sim_number, coalition_policy=deepcopy(policies_diffout),
+                                                       coalition_stats=deepcopy(stats_diffout), team_b_pol_string=team_b_pol)
+                    #rollouts_diffout_mean = np.mean(rollouts_diffout)
+                    #computed_coalitions[str(coalition_without_v)] = rollouts_diffout_mean
+                    computed_coalitions[str(coalition_without_v)] = rollouts_diffout
+                else:
+                    #rollouts_diffout_mean = rollouts_diff_mean
+                    rollouts_diffout = rollouts_diff
+            #values[v] += factorial(ld - 1) * factorial(vertices - ld) / fv * (rollouts_diff_mean - rollouts_diffout_mean)
+            values[v] += factorial(ld - 1) * factorial(vertices - ld) / fv * (rollouts_diff - rollouts_diffout)
+    np.savez_compressed('exact_shapley_a' + team_a_pol + '_b' + team_b_pol + '.npz', v=values, allow_pickle=True)
+    values = np.mean(values, axis=1)
+    return values

@@ -74,6 +74,7 @@ class Warrior(Role):
         self.role = 'warrior'
 
     def attack(self, target):
+        #temp_hp = target.stats['current hp'] - self.stats['attack power']/(1+target.stats['defense'])
         temp_hp = target.stats['current hp'] - self.stats['attack power']
         target.stats['current hp'] = np.clip(temp_hp, 0, target.stats['max hp'])
         if target.stats['current hp'] == 0:

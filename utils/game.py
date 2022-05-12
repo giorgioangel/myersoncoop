@@ -72,7 +72,7 @@ class Arena:
                       team_a_policy_list=deepcopy(self.team_a_policy), team_b_policy_list=deepcopy(self.team_b_policy))
         outcome = self.round()
         steps = 1.
-        while outcome == 0:
+        while outcome == 0 and steps < 1000:
             outcome = self.round()
             steps += 1.
         return 100*(outcome/steps + 1.)
