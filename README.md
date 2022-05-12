@@ -1,4 +1,7 @@
 # myersoncoop
+Repository of the paper: **_Towards a more efficient computation of individual attribute and policy contribution for post-hoc explainable multi-agent systems using Myerson values_**
+
+Look at .sh files to run the scripts
 
 Compute the Myerson Values (Shapleys on a graph) of both the Policy and stats of a 3v3 "arena" game.
 
