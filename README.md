@@ -13,8 +13,6 @@ At the beginning of each fight, one team is chosen to start first.
 
 The priority of action in every team is the following: 1) Warrior, 2) Mage, 3) Priest
 
-## Victory condition
-The game ends when all the players in a team are dead.
 
 # Role Description
 Every player has a **_policy_** and a set of stats:
@@ -39,7 +37,7 @@ A priest can only _heal_ a teammate.
 He heals the teammate by an amount equal to his **Healing Power**
 
 # Policies
-Two different policies are enabled: 1) Random 2) Smart.
+Three different policies are enabled: 1) Random 2) Smart 3) No-op
 
 ## Random Policy
 With this policy the target of the warrior and the mage are uniformly chosen between the alive enemies.
@@ -48,6 +46,9 @@ The target of the priest is chosen between the alive teammates.
 ## Smart Policy
 The Warrior and Mage target the enemies with this priority list: 1) Priest, 2) Mage, 3) Warrior
 The Priest always heals the teammate with the least HP.
+
+## No-op Policy
+No agent can act.
 
 # Experiment Setup
 The Mayerson Values for the following characteristics are computed:
@@ -90,40 +91,9 @@ the coalition utility (the same works for the Policy).
 We compute the Myerson Values for the first team of an Arena where the first team acts with a Smart Policy and the second
 team with a Random Policy.
 
-The Myerson Values are computed with the Montecarlo Sampling Approximation taken from https://arxiv.org/abs/2001.00065
+The Myerson Values can be computed with the Montecarlo Sampling Approximation taken from https://arxiv.org/abs/2001.00065
+but actually there are so few different connected coalitions that also an exact calculation is not so expensive.
 
-but actually there are so few different connected coalitions that an exact calculation is not so expensive.
-
-## Results
-The results are provided in hybrid_results.json and here:
-1. "Warrior Max HP": 19.720561079486124
-2. "Warrior Policy": 0.6382521207398747
-3. "Warrior Attack Power": 0.6366533135144863
-4. "Warrior Healing Power": -0.004131176548843827
-5. "Warrior Control Chance": 0.001546824696879214
-6. "Mage Max HP": 19.716973139166672
-7. "Mage Policy": 0.13344323139868602
-8. "Mage Attack Power": 0.03269830517974558
-9. "Mage Healing Power": -0.00046144266976715103
-10. "Mage Control Chance": 0.10901688699375713
-11. "Priest Max HP": 17.962603541120533
-12. "Priest Policy": 0.6612162217739637
-13. "Priest Attack Power": 0.0020078791985821535
-14. "Priest Healing Power": 0.660030789862061
-15. "Priest Control Chance": 0.0035148832165688014
-
-### Discussion
-As expected the most important stats are the Max HP.
-The second most important stats are the Policies.
-
-Since the warrior policy entirely depends on his attack power, the attack power myerson value is almost identical to the policy one.
-The myerson values of other warrior stats are almost zero.
-
-Since the mage policy depends on the control chance and on the attack power, their meyerson value are the only one within the set
-of stats that are statistically different from zero.
-
-Since the priest policy only depends on his healing power, the healing power myerson value is almost identical to the policy one.
-The other values are almost zero.
 
 ## Copyright
 Copyright 2022 Giorgio Angelotti
