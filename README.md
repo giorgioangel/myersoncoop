@@ -5,6 +5,17 @@ Look at .sh files to run the scripts
 
 Compute the Myerson Values (Shapleys on a graph) of both the Policy and stats of a 3v3 "arena" game.
 
+# Experiments' reproduction
+In order to reproduce the experiments run the scripts in the .sh files coop_xy.sh
+Where x is the policy of team A (r = random, s = smart, n = noop), and likewise y is the policy of team B.
+
+e.g. in coop_ss.sh you will find:
+```console
+python -W ignore main.py --exact 7 --full 1 --sim_num 200 --pol_a smart --pol_b smart
+```
+This will generate two .json files and two .npz files containing the results.
+Once you ran the experiments for all combinations of policies, put the output in the folder statisticaltests to analyze the results with results_table.py that generates a latex table with the statistical difference between the importance of the given feature and zero, and "Stat Tests.ipynb" that will compare Myerson and Shapley outputs.
+
 # Game Description
 This game is inspired by World of Warcraft 3v3 arenas.
 
