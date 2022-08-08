@@ -96,14 +96,12 @@ def coalition_policy(original, features_list):
 
     players_list = []
     if 1 in features_list:
-        players_list.append(0)
+        policy_list[0] = original
     if 6 in features_list:
-        players_list.append(1)
+        policy_list[1] = original
     if 11 in features_list:
-        players_list.append(2)
+        policy_list[2] = original
 
-    for index in players_list:
-        policy_list[index] = original
     return policy_list
 
 

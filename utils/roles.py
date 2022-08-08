@@ -49,7 +49,7 @@ class Priest(Role):
         target.stats['current hp'] = np.clip(temp_hp, 0, target.stats['max hp'])
         return target
 
-    def act(self, team, enemies):
+    def act(self, team, enemies, target_idx=None):
         if (self.alive is True) and (self.awake is True) and (self.policy != 'nothing'):
             alive_players_idx = get_alive_players(team)
             if len(alive_players_idx) > 0:
@@ -61,6 +61,8 @@ class Priest(Role):
                         if team[idx].stats['current hp'] < min_hp:
                             min_hp = team[idx].stats['current hp']
                             target_idx = idx
+                elif self.policy == 'rl' and target_idx != None:
+                    pass
                 else:
                     raise ValueError('Incorrect Policy')
                 team[target_idx] = self.heal(team[target_idx])
@@ -81,7 +83,7 @@ class Warrior(Role):
             target.alive = False
         return target
 
-    def act(self, team, enemies):
+    def act(self, team, enemies, target_idx=None):
         if (self.alive is True) and (self.awake is True) and (self.policy != 'nothing'):
             alive_players_idx = get_alive_players(enemies.players)
             if len(alive_players_idx) > 0:
@@ -95,6 +97,8 @@ class Warrior(Role):
                         target_idx = alive_roles.index('mage')
                     else:
                         target_idx = alive_roles.index('warrior')
+                elif self.policy == 'rl' and target_idx != None:
+                    pass
                 enemies.players[target_idx] = self.attack(enemies.players[target_idx])
         return team, enemies
 
@@ -110,7 +114,7 @@ class Mage(Role):
             target.awake = False
         return target
 
-    def act(self, team, enemies):
+    def act(self, team, enemies, target_idx=None):
         if (self.alive is True) and (self.awake is True) and (self.policy != 'nothing'):
             alive_players_idx = get_alive_players(enemies.players)
             if len(alive_players_idx) > 0:
@@ -124,6 +128,8 @@ class Mage(Role):
                         target_idx = alive_roles.index('mage')
                     else:
                         target_idx = alive_roles.index('warrior')
+                elif self.policy == 'rl' and target_idx != None:
+                    pass
                 enemies.players[target_idx] = self.control(enemies.players[target_idx])
         return team, enemies
 

@@ -16,19 +16,21 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from utils.myerson import hybrid_monte_carlo_myerson, exact_myerson, exact_shapley
+from utils.myerson import exact_myerson, exact_shapley
 from utils.helpers import default_stats
 import json
 import time
 
 
-def save_results(values, full, team_a_pol, team_b_pol, calc_type='myerson'):
+def save_results(values, full, team_a_pol, team_b_pol, t, calc_type='myerson'):
     results = {}
     roles = ['Warrior', 'Mage', 'Priest']
     stats = ['Max HP', 'Policy', 'Attack Power', 'Healing Power', 'Control Chance']
 
     for i in range(len(roles) * len(stats)):
         results[roles[i//len(stats)]+' '+stats[i % len(stats)]] = values[i]
+
+    results['Time'] = t
 
     if full == 0:
         with open("hybrid_"+calc_type+"_a"+team_a_pol+"_b"+team_b_pol+"_results.json", "w") as file:
@@ -44,6 +46,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--sim_num', type=int, action='store', dest='sim_num',
                         help='Number of simulations')
+
+    #parser.add_argument('--address', type=str, action='store', dest='address',
+                        #help='address')
 
     parser.add_argument('--mc_num', type=int, action='store', dest='mc_num',
                         help='Number of Monte Carlo samples')
@@ -62,31 +67,34 @@ if __name__ == '__main__':
 
     params = parser.parse_args()
 
+    # ray.init(address=params.address)
     # stats_distribution = []
     # stats_distribution.append(default_stats())
 
     # for stats in stats_distribution:
     ## HYBRYD NOT YET IMPLEMENTED FOR POLICY CHANGE
-    if params.full == 0:
-        start_time = time.time()
-        meyerson = hybrid_monte_carlo_myerson(sim_number=params.sim_num, meyerson_M=params.mc_num,
-                                           exact_computations=params.ex, player_stats=default_stats())
-        print("Hybrid Myerson --- %s seconds ---" % (time.time() - start_time))
-    elif params.full == 1:
+    #if params.full == 0:
+    #    start_time = time.time()
+    #    meyerson = hybrid_monte_carlo_myerson(sim_number=params.sim_num, meyerson_M=params.mc_num,
+    #                                       exact_computations=params.ex, player_stats=default_stats())
+    #    print("Hybrid Myerson --- %s seconds ---" % (time.time() - start_time))
+    if params.full == 1:
         print("Exact Myerson Calc", end="\n")
         start_time = time.time()
-        meyerson = exact_myerson(sim_number=params.sim_num, exact_computations=params.ex, player_stats=default_stats(),
+        myerson = exact_myerson(sim_number=params.sim_num, exact_computations=params.ex, player_stats=default_stats(),
                                  team_a_pol=params.pol_a, team_b_pol=params.pol_b)
-        print("Exact Myerson --- %s seconds ---" % (time.time() - start_time), end="\n\n")
-        save_results(meyerson, params.full, params.pol_a, params.pol_b)
+        end_time = time.time()
+        mye_time = end_time - start_time
+        print("Exact Myerson --- %s seconds ---" % (mye_time), end="\n\n")
+        save_results(myerson, params.full, params.pol_a, params.pol_b, mye_time)
 
         print("Exact Shapley Calc", end="\n")
         start_time = time.time()
         shapley = exact_shapley(sim_number=params.sim_num, exact_computations=params.ex, player_stats=default_stats(),
                                 team_a_pol=params.pol_a, team_b_pol=params.pol_b)
-        print("Exact Shapley --- %s seconds ---" % (time.time() - start_time), end="\n\n")
-        save_results(shapley, params.full, params.pol_a, params.pol_b, calc_type="shapley")
+        end_time = time.time()
+        shap_time = end_time - start_time
+        print("Exact Shapley --- %s seconds ---" % (shap_time), end="\n\n")
+        save_results(shapley, params.full, params.pol_a, params.pol_b, shap_time, calc_type="shapley")
     else:
         print("Error - Full should be 0 or 1")
-
-    save_results(meyerson, params.full, params.pol_a, params.pol_b)

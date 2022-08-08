@@ -17,10 +17,31 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import random
+#import ray
 import multiprocessing as mp
 from copy import deepcopy
 from utils.team import Team
 
+
+def istarmap(self, func, iterable, chunksize=1):
+    """starmap-version of imap
+    """
+    self._check_running()
+    if chunksize < 1:
+        raise ValueError(
+            "Chunksize must be 1+, not {0:n}".format(
+                chunksize))
+
+    task_batches = mpp.Pool._get_tasks(func, iterable, chunksize)
+    result = mpp.IMapIterator(self)
+    self._taskqueue.put(
+        (
+            self._guarded_task_generation(result._job,
+                                          mpp.starmapstar,
+                                          task_batches),
+            result._set_length
+        ))
+    return (item for chunk in result for item in chunk)
 
 class Arena:
     'Define the Arena'
@@ -30,7 +51,8 @@ class Arena:
     # THE PRIEST CAN ONLY HEAL
     # EVERY TEAM PERFORM ITS SEQUENCE OF ACTIONS BY TURN, IN THIS ORDER: WARRIOR, MAGE, PRIEST
     def __init__(self, team_a_stats=None, team_b_stats=None, team_a_policy_list=['random' for _ in range(3)],
-                 team_b_policy_list=['random' for _ in range(3)]):
+                 team_b_policy_list=['random' for _ in range(3)], address=None):
+        self.address=address
         self.team_a_stats = team_a_stats
         self.team_b_stats = team_b_stats
         self.team_a_policy = team_a_policy_list
@@ -80,8 +102,5 @@ class Arena:
     # simulate n games
     def simulate_games(self, n):
         pool = mp.Pool(mp.cpu_count())
-        result = pool.starmap_async(self.play, [() for _ in range(n)])
-        pool.close()
-        pool.join()
-        outcomes = result.get()
+        outcomes = pool.starmap(self.play, [() for _ in range(n)])
         return outcomes

@@ -11,10 +11,10 @@ Where x is the policy of team A (r = random, s = smart, n = noop), and likewise 
 
 e.g. in coop_ss.sh you will find:
 ```console
-python -W ignore main.py --exact 7 --full 1 --sim_num 200 --pol_a smart --pol_b smart
+python -W ignore main.py --exact 12 --full 1 --sim_num 72 --pol_a smart --pol_b smart
 ```
 This will generate two .json files and two .npz files containing the results.
-Once you ran the experiments for all combinations of policies, put the output in the folder statisticaltests to analyze the results with results_table.py that generates a latex table with the statistical difference between the importance of the given feature and zero, and "Stat Tests.ipynb" that will compare Myerson and Shapley outputs.
+Once you ran the experiments for all combinations of policies, put the output in the folder statisticaltests to analyze the results with results_table.py that generates a latex table with the statistical difference between the importance of the given feature and zero, and  will also compare Myerson and Shapley outputs.
 
 # Game Description
 This game is inspired by World of Warcraft 3v3 arenas.
@@ -30,7 +30,7 @@ The priority of action in every team is the following: 1) Warrior, 2) Mage, 3) P
 
 # Role Description
 Every player has a **_policy_** and a set of stats:
-1. Max HP
+1. Maximum Health Points
 2. Attack Power
 3. Healing Power
 4. Control Chance
@@ -51,7 +51,7 @@ A priest can only _heal_ a teammate.
 He heals the teammate by an amount equal to his **Healing Power**
 
 # Policies
-Three different policies are enabled: 1) Random 2) Smart 3) No-op
+Three different policies are enabled: 1) Random 2) Smart 3) No-op 4) Deep RL (A2C)
 
 ## Random Policy
 With this policy the target of the warrior and the mage are uniformly chosen between the alive enemies.
@@ -64,19 +64,22 @@ The Priest always heals the teammate with the least HP.
 ## No-op Policy
 No agent can act.
 
+## RL Policy
+The agents act following the output of a Deep RL trained algorithm (StableBaselines3's A2C).
+
 # Experiment Setup
 The Mayerson Values for the following characteristics are computed:
-1. Warrior Max HP
+1. Warrior Maximum Health Points
 2. Warrior Policy
 3. Warrior Attack Power
 4. Warrior Healing Power
 5. Warrior Control Chance
-6. Mage Max HP
+6. Mage Maximum Health Points
 7. Mage Policy
 8. Mage Attack Power
 9. Mage Healing Power
 10. Mage Control Chance
-11. Priest Max HP
+11. Priest Maximum Health Points
 12. Priest Policy
 13. Priest Attack Power
 14. Priest Healing Power
@@ -100,14 +103,6 @@ build the following graph for the game:
 
 It is clear that when one the Max HP of a player is not in a coalition, all the branch linked to it do not contribute to
 the coalition utility (the same works for the Policy).
-
-## Simulations
-We compute the Myerson Values for the first team of an Arena where the first team acts with a Smart Policy and the second
-team with a Random Policy.
-
-The Myerson Values can be computed with the Montecarlo Sampling Approximation taken from https://arxiv.org/abs/2001.00065
-but actually there are so few different connected coalitions that also an exact calculation is not so expensive.
-
 
 ## Copyright
 Copyright 2022 Giorgio Angelotti
