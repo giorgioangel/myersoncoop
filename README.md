@@ -11,7 +11,7 @@ Where x is the policy of team A (r = random, s = smart, n = noop), and likewise 
 
 e.g. in coop_ss.sh you will find:
 ```console
-python -W ignore main.py --exact 12 --full 1 --sim_num 72 --pol_a smart --pol_b smart
+python -W ignore main.py --exact 15 --full 1 --sim_num 72 --pol_a smart --pol_b smart
 ```
 This will generate two .json files and two .npz files containing the results.
 Once you ran the experiments for all combinations of policies, put the output in the folder statisticaltests to analyze the results with results_table.py that generates a latex table with the statistical difference between the importance of the given feature and zero, and  will also compare Myerson and Shapley outputs.
