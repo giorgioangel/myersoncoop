@@ -51,7 +51,7 @@ A priest can only _heal_ a teammate.
 He heals the teammate by an amount equal to his **Healing Power**
 
 # Policies
-Three different policies are enabled: 1) Random 2) Smart 3) No-op 4) Deep RL (A2C)
+Four different policies are enabled: 1) Random 2) Smart 3) No-op 4) Deep RL (A2C)
 
 ## Random Policy
 With this policy the target of the warrior and the mage are uniformly chosen between the alive enemies.
