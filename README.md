@@ -104,7 +104,24 @@ build the following graph for the game:
 It is clear that when one the Max HP of a player is not in a coalition, all the branch linked to it do not contribute to
 the coalition utility (the same works for the Policy).
 
-## Copyright
+# Citation
+If you used the research from the paper "Towards a more efficient computation of individual attribute and policy contribution for post-hoc explanation of cooperative multi-agent systems using Myerson values" by Giorgio Angelotti and Natalia Díaz-Rodríguez, published in the journal "Knowledge-Based Systems" in 2023, please cite it as follows:
+
+```
+@article{angelotti2023towards,
+  title={Towards a more efficient computation of individual attribute and policy contribution for post-hoc explanation of cooperative multi-agent systems using Myerson values},
+  author={Giorgio Angelotti and Natalia Díaz-Rodríguez},
+  journal={Knowledge-Based Systems},
+  volume={260},
+  pages={110189},
+  year={2023},
+  issn={0950-7051},
+  doi={https://doi.org/10.1016/j.knosys.2022.110189},
+  keywords={Explainable Multi-Agent Systems, Explainable Artificial Intelligence, Myerson values, Shapley values, A-priori knowledge graphs},
+}
+```
+
+# Copyright
 Copyright 2022 Giorgio Angelotti
 
 
